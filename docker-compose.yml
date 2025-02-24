@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: hotel_app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:6000"
+    environment:
+      DB_NAME: hotel_db
+      DB_USER: hotel_admin
+      DB_PASS: aswinjith@123
+      DB_HOST: db
+      DB_PORT: 5432
+      JWT_SECRET: hotel_dbsec
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  db:
+    image: postgres:latest
+    container_name: hotel_db_container
+    restart: always
+    environment:
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: hotel_admin
+      POSTGRES_PASSWORD: aswinjith@123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
