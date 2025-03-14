@@ -17,3 +17,12 @@ FRONTEND_URL=http://localhost:3000
 
 # CORS Configuration
 CORS_ORIGIN=http://localhost:3000
+
+
+
+
+DB_NAME=hotel_db
+DB_USER=hotel_admin
+DB_PASS=aswinjith@123
+DB_HOST=db
+DB_PORT=5432
