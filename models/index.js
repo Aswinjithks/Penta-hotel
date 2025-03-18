@@ -36,12 +36,14 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+// Initialize models
 db.Category = CategoryModel(sequelize, Sequelize.DataTypes);
 db.FoodItem = FoodItemModel(sequelize, Sequelize.DataTypes);
 db.Admin = AdminModel(sequelize, Sequelize.DataTypes);
 db.Table = TableModel(sequelize, Sequelize.DataTypes);
 db.Order = OrderModel(sequelize, Sequelize.DataTypes);
 
+// Define relationships between models
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
