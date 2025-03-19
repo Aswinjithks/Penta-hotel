@@ -1,13 +1,13 @@
-import dotenv from 'dotenv';
-import express from 'express';
-import cors from 'cors';
-import http from 'http';
-import { Server } from 'socket.io';
-import bodyParser from 'body-parser';
-import db from './models/index.js';
-import errorHandler from './middleware/errorHandler.js';
-import routes from './routes/index.js';
-import initSocket from './socket/index.js';
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
+import bodyParser from "body-parser";
+import db from "./models/index.js";
+import errorHandler from "./middleware/errorHandler.js";
+import routes from "./routes/index.js";
+import initSocket from "./socket/index.js";
 
 dotenv.config();
 

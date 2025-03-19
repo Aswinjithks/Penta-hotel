@@ -18,9 +18,19 @@ const CategoryModel = (sequelize, DataTypes) => {
         },
       },
     },
+    adminId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "Admins",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+    },
   });
 
   Category.associate = (models) => {
+    Category.belongsTo(models.Admin, { foreignKey: "adminId" });
     Category.hasMany(models.FoodItem);
   };
 

@@ -1,6 +1,6 @@
-import express from 'express';
-import * as tableController from '../controllers/tableController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import express from "express";
+import * as tableController from "../controllers/tableController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
