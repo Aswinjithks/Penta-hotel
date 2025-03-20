@@ -4,14 +4,14 @@ import asyncHandler from "../utils/asyncHandler.js";
 
 const { FoodItem, Category } = db;
 
-export const getAllItems = asyncHandler(async (req, res) => {
+export const getByCategory = asyncHandler(async (req, res) => {
   const { category_id } = req.query;
   const where = category_id
-    ? { CategoryId: category_id, available: true }
+    ? { categoryId: category_id, available: true }
     : { available: true };
   const items = await FoodItem.findAll({
     where,
-    include: [{ model: Category, attributes: ["name"] }],
+    include: [{ model: Category, as: "category", attributes: ["name"] }],
   });
   res.json({
     success: true,
@@ -19,22 +19,103 @@ export const getAllItems = asyncHandler(async (req, res) => {
   });
 });
 
-export const createItem = asyncHandler(async (req, res) => {
-  const { name, category_id, price, image_url } = req.body;
-  if (!name || !category_id || !price) {
-    throw new AppError("Name, category and price are required", 400);
+export const getFoodItems = asyncHandler(async (req, res) => {
+  try {
+    const foodItems = await FoodItem.findAll({
+      where: { available: true },
+      include: [
+        {
+          model: Category,
+          as: "category",
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (!foodItems.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No food items found",
+      });
+    }
+
+    const newArrivals = foodItems.filter((item) => item.new_arrival === true);
+    const popularItems = foodItems.filter((item) => item.popular === true);
+    const specialItems = foodItems.filter((item) => item.special === true);
+    const regularItems = foodItems.filter(
+      (item) => !item.new_arrival && !item.popular && !item.special
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: foodItems.length,
+      data: {
+        newArrivals,
+        popularItems,
+        specialItems,
+        regularItems,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching food items:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching food items",
+      error: error.message,
+    });
   }
-  // Check if category exists
+});
+export const createItem = asyncHandler(async (req, res) => {
+  const adminId = req.admin.id;
+  const {
+    name,
+    category_id,
+    price,
+    image_url,
+    time,
+    enable_quantity_options = false,
+    quarter_price = null,
+    half_price = null,
+    full_price = null,
+    offer = null,
+    description = null,
+    special = false,
+    popular = false,
+    new_arrival = false,
+  } = req.body;
+
+  if (!adminId) {
+    throw new AppError("Unauthorized: You are not autherized", 403);
+  }
+
+  if (!name || !category_id || !price || !time) {
+    throw new AppError("Name, category, price, and time are required", 400);
+  }
+
   const category = await Category.findByPk(category_id);
   if (!category) {
     throw new AppError("Category not found", 404);
   }
+
   const item = await FoodItem.create({
     name,
-    CategoryId: category_id,
+    categoryId: category_id,
     price,
     image_url,
+    time,
+    enable_quantity_options,
+    quarter_price,
+    half_price,
+    full_price,
+    offer,
+    description,
+    adminId,
+    special,
+    popular,
+    new_arrival,
   });
+
   res.status(201).json({
     success: true,
     message: "Item added successfully",
@@ -42,20 +123,78 @@ export const createItem = asyncHandler(async (req, res) => {
   });
 });
 
+export const editItem = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    category_id,
+    price,
+    image_url,
+    time,
+    enable_quantity_options,
+    quarter_price,
+    half_price,
+    full_price,
+    offer,
+    description,
+    special,
+    popular,
+    new_arrival,
+  } = req.body;
+
+  const item = await FoodItem.findByPk(id);
+  if (!item) {
+    throw new AppError("Food item not found", 404);
+  }
+  if (category_id) {
+    const category = await Category.findByPk(category_id);
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+  }
+
+  await item.update({
+    name: name ?? item.name,
+    categoryId: category_id ?? item.categoryId,
+    price: price ?? item.price,
+    image_url: image_url ?? item.image_url,
+    time: time ?? item.time,
+    enable_quantity_options:
+      enable_quantity_options ?? item.enable_quantity_options,
+    quarter_price: quarter_price ?? item.quarter_price,
+    half_price: half_price ?? item.half_price,
+    full_price: full_price ?? item.full_price,
+    offer: offer ?? item.offer,
+    description: description ?? item.description,
+    special: special ?? item.special,
+    popular: popular ?? item.popular,
+    new_arrival: new_arrival ?? item.new_arrival,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Item updated successfully",
+    data: item,
+  });
+});
+
 export const updateItemAvailability = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { available } = req.body;
+
+  let { available } = req.body;
+
   if (available === undefined) {
     throw new AppError("Available status is required", 400);
   }
+  available = available === "true" || available === true;
   const item = await FoodItem.findByPk(id);
   if (!item) {
     throw new AppError("Item not found", 404);
   }
   await item.update({ available });
-  res.json({
+  res.status(200).json({
     success: true,
-    message: "Item availability updated",
+    message: "Item availability updated successfully",
     data: item,
   });
 });

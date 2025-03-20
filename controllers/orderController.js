@@ -6,16 +6,19 @@ import asyncHandler from "../utils/asyncHandler.js";
 const { Order, Table, FoodItem } = db;
 
 export const getAllOrders = asyncHandler(async (req, res) => {
+  const adminId = req.admin.id;
   const orders = await Order.findAll({
+    where: { adminId },
     attributes: ["id", "items", "status", "createdAt"],
-    include: [{ model: Table, attributes: ["number"] }],
+    include: [{ model: Table, attributes: ["number", "table_name"] }],
   });
 
   const formattedOrders = orders.map((order) => ({
     id: order.id,
-    table_number: order.Table.number,
+    table_number: order.Table?.number || null,
     items: JSON.parse(order.items),
     status: order.status,
+    table_name: order.Table?.table_name || null,
     created_at: order.createdAt,
   }));
 
@@ -55,6 +58,7 @@ export const createOrder = asyncHandler(async (req, res) => {
         name: foodItem.name,
         price: foodItem.price,
         quantity: orderItem.quantity,
+        image_url: foodItem.image_url,
       };
     })
     .filter(Boolean);
@@ -69,7 +73,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     status: "pending",
     token: table.dataValues.token,
     number: table.dataValues.number,
-    adminId: table.dataValues.adminId
+    adminId: table.dataValues.adminId,
   });
 
   const io = getIO();
