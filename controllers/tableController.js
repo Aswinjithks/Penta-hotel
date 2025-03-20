@@ -7,9 +7,12 @@ import asyncHandler from "../utils/asyncHandler.js";
 const { Table } = db;
 
 export const getAllTables = asyncHandler(async (req, res) => {
+  const adminId = req.admin.id;
   const tables = await Table.findAll({
+    where: { adminId },
     attributes: ["id", "number", "qr_code_url", "token"],
   });
+
   res.json({
     success: true,
     data: tables,
