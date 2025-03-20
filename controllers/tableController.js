@@ -10,9 +10,8 @@ export const getAllTables = asyncHandler(async (req, res) => {
   const adminId = req.admin.id;
   const tables = await Table.findAll({
     where: { adminId },
-    attributes: ["id", "number", "qr_code_url", "token"],
+    attributes: ["id", "number", "qr_code_url", "token","capacity","table_name"],
   });
-
   res.json({
     success: true,
     data: tables,
