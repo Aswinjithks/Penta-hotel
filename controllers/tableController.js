@@ -36,19 +36,23 @@ export const createTable = asyncHandler(async (req, res) => {
   const adminId = req.admin.id;
   number = parseInt(number, 10);
   capacity = parseInt(capacity, 10);
-  
+
   if (!number || isNaN(number) || number < 1) {
     throw new AppError("Valid table number is required", 400);
   }
-  
+
   if (!capacity || isNaN(capacity) || capacity < 1) {
     throw new AppError("Valid table capacity is required", 400);
   }
 
-  if (!table_name || typeof table_name !== "string" || table_name.trim() === "") {
+  if (
+    !table_name ||
+    typeof table_name !== "string" ||
+    table_name.trim() === ""
+  ) {
     throw new AppError("Valid table name is required", 400);
   }
-  
+
   const token = uuidv4();
   const tableUrl = `${process.env.FRONTEND_URL}/order?token=${token}`;
   const qrCode = await QRCode.toDataURL(tableUrl);
@@ -86,8 +90,8 @@ export const createTable = asyncHandler(async (req, res) => {
 });
 
 export const updateTable = asyncHandler(async (req, res) => {
-  const { id } = req.params;
   let { number, capacity, table_name } = req.body;
+  const { id } = req.params;
   const adminId = req.admin.id;
   number = parseInt(number, 10);
   capacity = parseInt(capacity, 10);
@@ -100,7 +104,11 @@ export const updateTable = asyncHandler(async (req, res) => {
     throw new AppError("Valid table capacity is required", 400);
   }
 
-  if (!table_name || typeof table_name !== "string" || table_name.trim() === "") {
+  if (
+    !table_name ||
+    typeof table_name !== "string" ||
+    table_name.trim() === ""
+  ) {
     throw new AppError("Valid table name is required", 400);
   }
 
@@ -111,9 +119,11 @@ export const updateTable = asyncHandler(async (req, res) => {
     }
 
     const existingTable = await Table.findOne({
-      where: { number, adminId },
+      where: {
+        number,
+        adminId,
+      },
     });
-
     if (existingTable && existingTable.id !== parseInt(id, 10)) {
       throw new AppError("You already have a table with this number", 400);
     }
@@ -129,7 +139,7 @@ export const updateTable = asyncHandler(async (req, res) => {
     table.qr_code_url = qrCode;
     await table.save();
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Table updated successfully",
       data: table,
