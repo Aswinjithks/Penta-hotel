@@ -72,7 +72,7 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 });
 
 export const getCategoriesByAdminId = asyncHandler(async (req, res) => {
-  const { adminId } = req.params;
+  const adminId = req.admin.id;
   const categories = await Category.findAll({
     where: { adminId },
   });
