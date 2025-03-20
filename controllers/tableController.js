@@ -32,13 +32,23 @@ export const getTableQR = asyncHandler(async (req, res) => {
 });
 
 export const createTable = asyncHandler(async (req, res) => {
-  let { number } = req.body;
+  let { number, capacity, table_name } = req.body;
   const adminId = req.admin.id;
   number = parseInt(number, 10);
+  capacity = parseInt(capacity, 10);
+  
   if (!number || isNaN(number) || number < 1) {
     throw new AppError("Valid table number is required", 400);
   }
+  
+  if (!capacity || isNaN(capacity) || capacity < 1) {
+    throw new AppError("Valid table capacity is required", 400);
+  }
 
+  if (!table_name || typeof table_name !== "string" || table_name.trim() === "") {
+    throw new AppError("Valid table name is required", 400);
+  }
+  
   const token = uuidv4();
   const tableUrl = `${process.env.FRONTEND_URL}/order?token=${token}`;
   const qrCode = await QRCode.toDataURL(tableUrl);
@@ -55,6 +65,8 @@ export const createTable = asyncHandler(async (req, res) => {
     }
     const table = await Table.create({
       number,
+      capacity,
+      table_name,
       token,
       qr_code_url: qrCode,
       adminId,
@@ -75,12 +87,21 @@ export const createTable = asyncHandler(async (req, res) => {
 
 export const updateTable = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  let { number } = req.body;
+  let { number, capacity, table_name } = req.body;
   const adminId = req.admin.id;
   number = parseInt(number, 10);
+  capacity = parseInt(capacity, 10);
 
   if (!number || isNaN(number) || number < 1) {
     throw new AppError("Valid table number is required", 400);
+  }
+
+  if (!capacity || isNaN(capacity) || capacity < 1) {
+    throw new AppError("Valid table capacity is required", 400);
+  }
+
+  if (!table_name || typeof table_name !== "string" || table_name.trim() === "") {
+    throw new AppError("Valid table name is required", 400);
   }
 
   try {
@@ -102,6 +123,8 @@ export const updateTable = asyncHandler(async (req, res) => {
     const qrCode = await QRCode.toDataURL(tableUrl);
 
     table.number = number;
+    table.capacity = capacity;
+    table.table_name = table_name;
     table.token = token;
     table.qr_code_url = qrCode;
     await table.save();

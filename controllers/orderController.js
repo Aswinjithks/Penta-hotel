@@ -31,10 +31,6 @@ export const createOrder = asyncHandler(async (req, res) => {
     throw new AppError("Token and items are required", 400);
   }
   const table = await Table.findOne({ where: { token } });
-
-  console.log("============================================================",table.dataValues);
-  
-
   if (!table) {
     throw new AppError("Invalid table token", 403);
   }

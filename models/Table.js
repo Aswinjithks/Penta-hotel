@@ -3,7 +3,6 @@ const TableModel = (sequelize, DataTypes) => {
     number: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      // Removed unique: true here
       validate: {
         isInt: {
           msg: "Table number must be an integer",
@@ -11,6 +10,28 @@ const TableModel = (sequelize, DataTypes) => {
         min: {
           args: [1],
           msg: "Table number must be positive",
+        },
+      },
+    },
+    capacity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        isInt: {
+          msg: "Table capacity must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Table capacity must be positive",
+        },
+      },
+    },
+    table_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: "Table name is required",
         },
       },
     },
