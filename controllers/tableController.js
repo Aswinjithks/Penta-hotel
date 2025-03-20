@@ -10,7 +10,7 @@ export const getAllTables = asyncHandler(async (req, res) => {
   const adminId = req.admin.id;
   const tables = await Table.findAll({
     where: { adminId },
-    attributes: ["id", "number", "token","capacity","table_name"],
+    attributes: ["id", "number", "token", "capacity", "table_name"],
   });
   res.json({
     success: true,
@@ -56,7 +56,7 @@ export const createTable = asyncHandler(async (req, res) => {
   }
 
   const token = uuidv4();
-  const tableUrl = `${process.env.FRONTEND_URL}/order?token=${token}`;
+  const tableUrl = `${process.env.FRONTEND_URL}?token=${token}`;
   const qrCode = await QRCode.toDataURL(tableUrl);
 
   try {
