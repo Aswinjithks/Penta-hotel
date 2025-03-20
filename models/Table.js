@@ -3,7 +3,7 @@ const TableModel = (sequelize, DataTypes) => {
     number: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true,
+      // Removed unique: true here
       validate: {
         isInt: {
           msg: "Table number must be an integer",
@@ -32,6 +32,13 @@ const TableModel = (sequelize, DataTypes) => {
       },
       onDelete: "CASCADE",
     },
+  });
+
+  Table.addHook("afterDefine", () => {
+    Table.addIndex(["number", "adminId"], {
+      unique: true,
+      name: "table_number_admin_unique",
+    });
   });
 
   Table.associate = (models) => {

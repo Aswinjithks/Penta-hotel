@@ -31,6 +31,10 @@ export const createOrder = asyncHandler(async (req, res) => {
     throw new AppError("Token and items are required", 400);
   }
   const table = await Table.findOne({ where: { token } });
+
+  console.log("============================================================",table.dataValues);
+  
+
   if (!table) {
     throw new AppError("Invalid table token", 403);
   }
@@ -67,9 +71,11 @@ export const createOrder = asyncHandler(async (req, res) => {
     TableId: table.id,
     items: JSON.stringify(orderItems),
     status: "pending",
+    token: table.dataValues.token,
+    number: table.dataValues.number,
+    adminId: table.dataValues.adminId
   });
 
-  // Emit socket event for new order
   const io = getIO();
   if (io) {
     io.to("admin-room").emit("new_order", {

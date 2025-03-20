@@ -32,62 +32,91 @@ export const getTableQR = asyncHandler(async (req, res) => {
 });
 
 export const createTable = asyncHandler(async (req, res) => {
-  const { number } = req.body;
+  let { number } = req.body;
   const adminId = req.admin.id;
+  number = parseInt(number, 10);
+  if (!number || isNaN(number) || number < 1) {
+    throw new AppError("Valid table number is required", 400);
+  }
 
-  console.log("adminId",adminId);
-  
-  
-  if (!number) {
-    throw new AppError("Table number is required", 400);
-  }
-  const existingTable = await Table.findOne({ where: { number } });
-  if (existingTable) {
-    throw new AppError("Table number already exists", 400);
-  }
   const token = uuidv4();
   const tableUrl = `${process.env.FRONTEND_URL}/order?token=${token}`;
   const qrCode = await QRCode.toDataURL(tableUrl);
-  const table = await Table.create({
-    number,
-    token,
-    qr_code_url: qrCode,
-    adminId
-  });
-  res.status(201).json({
-    success: true,
-    message: "Table created successfully",
-    data: table,
-  });
+
+  try {
+    const existingTable = await Table.findOne({
+      where: {
+        number,
+        adminId,
+      },
+    });
+    if (existingTable) {
+      throw new AppError("You already have a table with this number", 400);
+    }
+    const table = await Table.create({
+      number,
+      token,
+      qr_code_url: qrCode,
+      adminId,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Table created successfully",
+      data: table,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      throw new AppError("You already have a table with this number", 400);
+    }
+    throw error;
+  }
 });
 
 export const updateTable = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { number } = req.body;
+  let { number } = req.body;
+  const adminId = req.admin.id;
+  number = parseInt(number, 10);
 
-  if (!number) {
-    throw new AppError("Table number is required", 400);
+  if (!number || isNaN(number) || number < 1) {
+    throw new AppError("Valid table number is required", 400);
   }
 
-  const table = await Table.findByPk(id);
-  if (!table) {
-    throw new AppError("Table not found", 404);
+  try {
+    const table = await Table.findByPk(id);
+    if (!table || table.adminId !== adminId) {
+      throw new AppError("Table not found", 404);
+    }
+
+    const existingTable = await Table.findOne({
+      where: { number, adminId },
+    });
+
+    if (existingTable && existingTable.id !== parseInt(id, 10)) {
+      throw new AppError("You already have a table with this number", 400);
+    }
+
+    const token = uuidv4();
+    const tableUrl = `${process.env.FRONTEND_URL}/order?token=${token}`;
+    const qrCode = await QRCode.toDataURL(tableUrl);
+
+    table.number = number;
+    table.token = token;
+    table.qr_code_url = qrCode;
+    await table.save();
+
+    res.json({
+      success: true,
+      message: "Table updated successfully",
+      data: table,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      throw new AppError("You already have a table with this number", 400);
+    }
+    throw error;
   }
-
-  // Check if another table already has this number
-  const existingTable = await Table.findOne({ where: { number } });
-  if (existingTable && existingTable.id !== parseInt(id)) {
-    throw new AppError("Table number already exists", 400);
-  }
-
-  table.number = number;
-  await table.save();
-
-  res.json({
-    success: true,
-    message: "Table updated successfully",
-    data: table,
-  });
 });
 
 export const deleteTable = asyncHandler(async (req, res) => {

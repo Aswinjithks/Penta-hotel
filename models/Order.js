@@ -1,35 +1,38 @@
-const TableModel = (sequelize, DataTypes) => {
-    const Table = sequelize.define("Table", {
-      number: { 
-        type: DataTypes.INTEGER, 
-        allowNull: false, 
-        unique: true,
-        validate: {
-          isInt: {
-            msg: "Table number must be an integer"
-          },
-          min: {
-            args: [1],
-            msg: "Table number must be positive"
-          }
-        }
+const OrderModel = (sequelize, DataTypes) => {
+  const Order = sequelize.define("Order", {
+    status: {
+      type: DataTypes.ENUM("pending", "processing", "completed", "cancelled"),
+      allowNull: false,
+      defaultValue: "pending",
+    },
+    items: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: "Items cannot be empty",
+        },
       },
-      token: { 
-        type: DataTypes.STRING, 
-        allowNull: false, 
-        unique: true 
-      },
-      qr_code_url: { 
-        type: DataTypes.TEXT, 
-        allowNull: true 
-      },
-    });
-  
-    Table.associate = (models) => {
-      Table.hasMany(models.Order);
-    };
-  
-    return Table;
+    },
+    token: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    number: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    adminId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+  });
+
+  Order.associate = (models) => {
+    Order.belongsTo(models.Table, { foreignKey: "TableId" });
   };
-  
-  export default TableModel;
+
+  return Order;
+};
+
+export default OrderModel;

@@ -1,12 +1,23 @@
+import { where } from "sequelize";
 import db from "../models/index.js";
 import AppError from "../utils/appError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-const { Category } = db;
+const { Category, Table } = db;
 
 export const getAllCategories = asyncHandler(async (req, res) => {
   const tableId = req.body.tableId;
-  const categories = await Category.findAll();
+  if (!tableId) {
+    throw new AppError("Table ID is required", 400);
+  }
+  const table = await Table.findOne({ where: { token: tableId } });
+  const adminId = table.dataValues.adminId;
+  if (!adminId) {
+    throw new AppError("Invalid admin ID", 403);
+  }
+  const categories = await Category.findAll({
+    where: { adminId: adminId },
+  });
   res.json({
     success: true,
     data: categories,
@@ -16,8 +27,6 @@ export const getAllCategories = asyncHandler(async (req, res) => {
 export const createCategory = asyncHandler(async (req, res) => {
   const { name, image } = req.body;
   const adminId = req.admin.id;
-  console.log("adminId----------",adminId);
-  
   if (!name) {
     throw new AppError("Category name is required", 400);
   }
@@ -64,7 +73,6 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 
 export const getCategoriesByAdminId = asyncHandler(async (req, res) => {
   const { adminId } = req.params;
-
   const categories = await Category.findAll({
     where: { adminId },
   });
@@ -72,7 +80,6 @@ export const getCategoriesByAdminId = asyncHandler(async (req, res) => {
   if (!categories.length) {
     throw new AppError("No categories found for this admin", 404);
   }
-
   res.json({
     success: true,
     data: categories,
