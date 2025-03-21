@@ -71,7 +71,7 @@ const FoodItemModel = (sequelize, DataTypes) => {
     },
     price: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
       validate: {
         isFloat: {
           msg: "Price must be a valid number",
@@ -80,8 +80,19 @@ const FoodItemModel = (sequelize, DataTypes) => {
           args: [0],
           msg: "Price cannot be negative",
         },
+        customValidation(value) {
+          if (
+            !this.enable_quantity_options &&
+            (value === null || value === undefined)
+          ) {
+            throw new Error(
+              "Price is required when enable_quantity_options is false"
+            );
+          }
+        },
       },
     },
+
     available: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

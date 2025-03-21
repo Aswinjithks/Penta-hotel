@@ -149,7 +149,7 @@ export const createItem = asyncHandler(async (req, res) => {
     throw new AppError("Unauthorized: You are not authorized", 403);
   }
 
-  if (!name || !category_id || !price || !time) {
+  if (!name || !category_id || !time) {
     throw new AppError("Name, category, price, and time are required", 400);
   }
 
