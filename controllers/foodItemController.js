@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import db from "../models/index.js";
 import AppError from "../utils/appError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -79,14 +80,20 @@ export const getFoodItems = asyncHandler(async (req, res) => {
 
 export const getAdminFoodItems = asyncHandler(async (req, res) => {
   const adminId = req.admin.id;
-
+  const search = req.query.search || "";
   if (!adminId) {
     throw new AppError("Unauthorized: You are not authorized", 403);
   }
-
   try {
     const foodItems = await FoodItem.findAll({
-      where: { adminId },
+      where: {
+        adminId,
+        ...(search && {
+          name: {
+            [Op.iLike]: `%${search}%`,
+          },
+        }),
+      },
       include: [
         {
           model: Category,
@@ -234,7 +241,6 @@ export const editItem = asyncHandler(async (req, res) => {
     new_arrival: new_arrival ?? item.new_arrival,
   });
 
-  // Fetch the updated item with category details
   const updatedItem = await FoodItem.findByPk(id, {
     include: [
       {
