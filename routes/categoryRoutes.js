@@ -4,7 +4,7 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", categoryController.getAllCategories);
+router.get("/:tableId", categoryController.getAllCategories);
 router.post("/", protect, categoryController.createCategory);
 router.put("/:id", protect, categoryController.updateCategory);
 router.delete("/:id", protect, categoryController.deleteCategory);

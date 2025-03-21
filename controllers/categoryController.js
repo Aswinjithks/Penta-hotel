@@ -6,7 +6,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 const { Category, Table } = db;
 
 export const getAllCategories = asyncHandler(async (req, res) => {
-  const tableId = req.body.tableId;
+  const tableId = req.params.tableId;
   if (!tableId) {
     throw new AppError("Table ID is required", 400);
   }
