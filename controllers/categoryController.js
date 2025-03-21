@@ -1,4 +1,4 @@
-import { where } from "sequelize";
+import { Op, where } from "sequelize";
 import db from "../models/index.js";
 import AppError from "../utils/appError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -73,10 +73,14 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 
 export const getCategoriesByAdminId = asyncHandler(async (req, res) => {
   const adminId = req.admin.id;
+  const { search } = req.query;
+  const whereCondition = { adminId };
+  if (search) {
+    whereCondition.name = { [Op.iLike]: `%${search}%` };
+  }
   const categories = await Category.findAll({
-    where: { adminId },
+    where: whereCondition,
   });
-
   if (!categories.length) {
     throw new AppError("No categories found for this admin", 404);
   }

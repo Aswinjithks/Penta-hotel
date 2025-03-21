@@ -8,6 +8,6 @@ router.get("/:tableId", categoryController.getAllCategories);
 router.post("/", protect, categoryController.createCategory);
 router.put("/:id", protect, categoryController.updateCategory);
 router.delete("/:id", protect, categoryController.deleteCategory);
-router.get("/admin", protect, categoryController.getCategoriesByAdminId);
+router.get("/admin/category", protect, categoryController.getCategoriesByAdminId);
 
 export default router;
