@@ -5,7 +5,8 @@ import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.post("/", protect, foodItemController.createItem);
-router.get("/", protect, foodItemController.getFoodItems);
+router.get("/:tableId", foodItemController.getFoodItems); //User part
+router.get("/",protect, foodItemController.getAdminFoodItems); //Admin part
 router.put("/:id", protect, foodItemController.editItem); 
 router.put("/:id/availability", protect, foodItemController.updateItemAvailability);
 router.delete("/:id", protect, foodItemController.deleteItem);

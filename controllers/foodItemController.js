@@ -2,7 +2,7 @@ import db from "../models/index.js";
 import AppError from "../utils/appError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-const { FoodItem, Category } = db;
+const { FoodItem, Category, Table } = db;
 
 export const getByCategory = asyncHandler(async (req, res) => {
   const { category_id } = req.query;
@@ -20,9 +20,19 @@ export const getByCategory = asyncHandler(async (req, res) => {
 });
 
 export const getFoodItems = asyncHandler(async (req, res) => {
+  const tableId = req.params.tableId;
   try {
+    const tableData = await Table.findOne({ where: { token: tableId } });
+    if (!tableData) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+    const adminId = tableData.adminId;
+
     const foodItems = await FoodItem.findAll({
-      where: { available: true },
+      where: { available: true, adminId },
       include: [
         {
           model: Category,
@@ -36,7 +46,7 @@ export const getFoodItems = asyncHandler(async (req, res) => {
     if (!foodItems.length) {
       return res.status(404).json({
         success: false,
-        message: "No food items found",
+        message: "No food items found for this admin",
       });
     }
 
@@ -66,6 +76,49 @@ export const getFoodItems = asyncHandler(async (req, res) => {
     });
   }
 });
+
+export const getAdminFoodItems = asyncHandler(async (req, res) => {
+  const adminId = req.admin.id;
+
+  if (!adminId) {
+    throw new AppError("Unauthorized: You are not authorized", 403);
+  }
+
+  try {
+    const foodItems = await FoodItem.findAll({
+      where: { adminId },
+      include: [
+        {
+          model: Category,
+          as: "category",
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (!foodItems.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No food items found for this admin",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: foodItems.length,
+      data: foodItems,
+    });
+  } catch (error) {
+    console.error("Error fetching admin's food items:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching food items",
+      error: error.message,
+    });
+  }
+});
+
 export const createItem = asyncHandler(async (req, res) => {
   const adminId = req.admin.id;
   const {
@@ -86,7 +139,7 @@ export const createItem = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!adminId) {
-    throw new AppError("Unauthorized: You are not autherized", 403);
+    throw new AppError("Unauthorized: You are not authorized", 403);
   }
 
   if (!name || !category_id || !price || !time) {
@@ -115,11 +168,20 @@ export const createItem = asyncHandler(async (req, res) => {
     popular,
     new_arrival,
   });
+  const createdItem = await FoodItem.findByPk(item.id, {
+    include: [
+      {
+        model: Category,
+        as: "category",
+        attributes: ["id", "name"],
+      },
+    ],
+  });
 
   res.status(201).json({
     success: true,
     message: "Item added successfully",
-    data: item,
+    data: createdItem,
   });
 });
 
@@ -146,6 +208,7 @@ export const editItem = asyncHandler(async (req, res) => {
   if (!item) {
     throw new AppError("Food item not found", 404);
   }
+
   if (category_id) {
     const category = await Category.findByPk(category_id);
     if (!category) {
@@ -171,10 +234,21 @@ export const editItem = asyncHandler(async (req, res) => {
     new_arrival: new_arrival ?? item.new_arrival,
   });
 
+  // Fetch the updated item with category details
+  const updatedItem = await FoodItem.findByPk(id, {
+    include: [
+      {
+        model: Category,
+        as: "category",
+        attributes: ["id", "name"],
+      },
+    ],
+  });
+
   res.status(200).json({
     success: true,
     message: "Item updated successfully",
-    data: item,
+    data: updatedItem,
   });
 });
 
